@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.dataGVListEmails = new System.Windows.Forms.DataGridView();
             this.ColSelected = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.ColFrom = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -40,10 +40,8 @@
             this.textBoxUsername = new System.Windows.Forms.TextBox();
             this.labelUsername = new System.Windows.Forms.Label();
             this.labelInputNotVallid = new System.Windows.Forms.Label();
-            this.btnRefresh = new System.Windows.Forms.Button();
             this.btnSearch = new System.Windows.Forms.Button();
             this.textBoxSearch = new System.Windows.Forms.TextBox();
-            this.btnCompose = new System.Windows.Forms.Button();
             this.listViewMailboxes = new System.Windows.Forms.ListView();
             this.btnSend = new System.Windows.Forms.Button();
             this.btnReply = new System.Windows.Forms.Button();
@@ -53,19 +51,22 @@
             this.textBoxSubject = new System.Windows.Forms.TextBox();
             this.lblAddress = new System.Windows.Forms.Label();
             this.lblSubject = new System.Windows.Forms.Label();
+            this.btnRefresh = new System.Windows.Forms.Button();
+            this.btnBackup = new System.Windows.Forms.Button();
+            this.btnRestore = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGVListEmails)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGVListEmails
             // 
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.SteelBlue;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGVListEmails.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.SteelBlue;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGVListEmails.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             this.dataGVListEmails.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ColSelected,
             this.ColFrom,
@@ -171,26 +172,16 @@
             this.labelInputNotVallid.Text = "Username or password is not valid";
             this.labelInputNotVallid.Visible = false;
             // 
-            // btnRefresh
-            // 
-            this.btnRefresh.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.btnRefresh.Location = new System.Drawing.Point(848, 82);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(72, 23);
-            this.btnRefresh.TabIndex = 22;
-            this.btnRefresh.Text = "Refresh";
-            this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.BtnRefresh_Click);
-            // 
             // btnSearch
             // 
-            this.btnSearch.ForeColor = System.Drawing.Color.Gray;
+            this.btnSearch.ForeColor = System.Drawing.Color.DodgerBlue;
             this.btnSearch.Location = new System.Drawing.Point(118, 83);
             this.btnSearch.Name = "btnSearch";
             this.btnSearch.Size = new System.Drawing.Size(72, 23);
             this.btnSearch.TabIndex = 21;
             this.btnSearch.Text = "Search";
             this.btnSearch.UseVisualStyleBackColor = true;
+            this.btnSearch.Click += new System.EventHandler(this.BtnSearch_Click);
             // 
             // textBoxSearch
             // 
@@ -198,16 +189,6 @@
             this.textBoxSearch.Name = "textBoxSearch";
             this.textBoxSearch.Size = new System.Drawing.Size(239, 20);
             this.textBoxSearch.TabIndex = 20;
-            // 
-            // btnCompose
-            // 
-            this.btnCompose.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.btnCompose.Location = new System.Drawing.Point(12, 83);
-            this.btnCompose.Name = "btnCompose";
-            this.btnCompose.Size = new System.Drawing.Size(100, 23);
-            this.btnCompose.TabIndex = 23;
-            this.btnCompose.Text = "Compose";
-            this.btnCompose.UseVisualStyleBackColor = true;
             // 
             // listViewMailboxes
             // 
@@ -298,11 +279,47 @@
             this.lblSubject.TabIndex = 33;
             this.lblSubject.Text = "Subject";
             // 
+            // btnRefresh
+            // 
+            this.btnRefresh.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.btnRefresh.Location = new System.Drawing.Point(844, 83);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(75, 23);
+            this.btnRefresh.TabIndex = 34;
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.UseVisualStyleBackColor = true;
+            this.btnRefresh.Click += new System.EventHandler(this.BtnRefresh_Click);
+            // 
+            // btnBackup
+            // 
+            this.btnBackup.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.btnBackup.Location = new System.Drawing.Point(12, 611);
+            this.btnBackup.Name = "btnBackup";
+            this.btnBackup.Size = new System.Drawing.Size(100, 23);
+            this.btnBackup.TabIndex = 35;
+            this.btnBackup.Text = "Backup";
+            this.btnBackup.UseVisualStyleBackColor = true;
+            this.btnBackup.Click += new System.EventHandler(this.BtnBackup_Click);
+            // 
+            // btnRestore
+            // 
+            this.btnRestore.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.btnRestore.Location = new System.Drawing.Point(12, 582);
+            this.btnRestore.Name = "btnRestore";
+            this.btnRestore.Size = new System.Drawing.Size(100, 23);
+            this.btnRestore.TabIndex = 36;
+            this.btnRestore.Text = "Restore";
+            this.btnRestore.UseVisualStyleBackColor = true;
+            this.btnRestore.Click += new System.EventHandler(this.BtnRestore_Click);
+            // 
             // SaintSender
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(939, 666);
+            this.Controls.Add(this.btnRestore);
+            this.Controls.Add(this.btnBackup);
+            this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.lblSubject);
             this.Controls.Add(this.lblAddress);
             this.Controls.Add(this.textBoxSubject);
@@ -312,8 +329,6 @@
             this.Controls.Add(this.btnReply);
             this.Controls.Add(this.btnSend);
             this.Controls.Add(this.listViewMailboxes);
-            this.Controls.Add(this.btnCompose);
-            this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.btnSearch);
             this.Controls.Add(this.textBoxSearch);
             this.Controls.Add(this.labelInputNotVallid);
@@ -344,10 +359,8 @@
         private System.Windows.Forms.TextBox textBoxUsername;
         private System.Windows.Forms.Label labelUsername;
         private System.Windows.Forms.Label labelInputNotVallid;
-        private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.TextBox textBoxSearch;
-        private System.Windows.Forms.Button btnCompose;
         private System.Windows.Forms.ListView listViewMailboxes;
         private System.Windows.Forms.Button btnSend;
         private System.Windows.Forms.Button btnReply;
@@ -357,6 +370,9 @@
         private System.Windows.Forms.TextBox textBoxSubject;
         private System.Windows.Forms.Label lblAddress;
         private System.Windows.Forms.Label lblSubject;
+        private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.Button btnBackup;
+        private System.Windows.Forms.Button btnRestore;
     }
 }
 

@@ -96,6 +96,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Backup.cs" />
     <Compile Include="MailManager.cs" />
     <Compile Include="SaintSender.cs">
       <SubType>Form</SubType>
@@ -105,6 +106,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StringMail.cs" />
     <EmbeddedResource Include="SaintSender.resx">
       <DependentUpon>SaintSender.cs</DependentUpon>
     </EmbeddedResource>

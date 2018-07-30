@@ -1,15 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using S22.Imap;
-using System.Net;
-using Google.Apis.Gmail.v1.Data;
 using System.Net.Mail;
 using System.Threading;
 
@@ -17,18 +10,15 @@ namespace SaintSender
 {
     public partial class SaintSender : Form
     {
-        Task task;
-        static CancellationTokenSource tokenSource = new CancellationTokenSource();
-        CancellationToken token;
+        Thread autoSyncThread;
         MailManager mailManager;
+        bool threadStop;
 
         public SaintSender()
         {
             InitializeComponent();
             mailManager = new MailManager();
-            //task = new Task(Account_Load, token);
-            token = tokenSource.Token;
-            task = Task.Factory.StartNew(() => Account_Load(), token);
+            threadStop = false;
         }
 
         private void InitLoggedOutView()
@@ -52,6 +42,7 @@ namespace SaintSender
 
         private void ShowMailboxes(IEnumerable<string> mailboxes)
         {
+            listViewMailboxes.Clear();
             foreach (var mailbox in mailboxes)
             {
                 string mailboxName = mailbox;
@@ -63,13 +54,13 @@ namespace SaintSender
                 {
                     Tag = mailbox
                 };
+
                 listViewMailboxes.Items.Add(listViewItem);
             }
         }
 
         private void ShowMails(IEnumerable<MailMessage> messages)
         {
-            int counter = 0;
             dataGVListEmails.Rows.Clear();
             foreach (var message in messages)
             {
@@ -79,21 +70,25 @@ namespace SaintSender
                 var Date = message.Headers["Date"];
                 var rowIndex = dataGVListEmails.Rows.Add(new object[] { false, From, Subject, Date });
                 dataGVListEmails.Rows[rowIndex].Tag = message;
-                counter++;
             }
             dataGVListEmails.Sort(dataGVListEmails.Columns[3], ListSortDirection.Ascending);
         }
 
         private void Account_Load()
         {
-            DisplayMessages();
-            labelAccount.Text = mailManager.AccountName;
-            IEnumerable<string> mailboxes = mailManager.GetMailboxes();
-            ShowMailboxes(mailboxes);
-            while (true)
+            if (!threadStop)
             {
-                DisplayMessages();
-                task.Wait(5000);
+                try
+                {
+                    labelAccount.Text = mailManager.AccountName;
+                    IEnumerable<string> mailboxes = mailManager.GetMailboxes();
+                    ShowMailboxes(mailboxes);
+                    DisplayMessages();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    MessageBox.Show(ex.ToString());
+                }
             }
         }
 
@@ -111,8 +106,18 @@ namespace SaintSender
                 try
                 {
                     mailManager.InitAccount(Username, Password);
-                    task.Start();
                     InitSignedInView();
+                    threadStop = false;
+                    autoSyncThread = new Thread(() =>
+                    {
+                        while (true)
+                        {
+                            Account_Load();
+                            Thread.Sleep(5000);
+                        }
+                    });
+
+                    autoSyncThread.Start();
                 }
                 catch (Exception)
                 {
@@ -122,16 +127,13 @@ namespace SaintSender
             }
             else if (btnSignIn.Text.Equals("Log out"))
             {
+                threadStop = true;
+#pragma warning disable CS0618 // Type or member is obsolete
+                autoSyncThread.Suspend();
+#pragma warning restore CS0618 // Type or member is obsolete
                 InitLoggedOutView();
-                tokenSource.Cancel();
-                tokenSource.Dispose();
                 mailManager.Logout();
             }
-        }
-
-        private void BtnRefresh_Click(object sender, EventArgs e)
-        {
-            DisplayMessages();
         }
 
         private void BtnSend_Click(object sender, EventArgs e)
@@ -191,6 +193,61 @@ namespace SaintSender
             if (!String.IsNullOrEmpty(textBoxAddress.Text))
             {
                 MessageBox.Show(@"If you change the this email address you won't be able to reply!");
+            }
+        }
+
+        private void BtnSearch_Click(object sender, EventArgs e)
+        {
+            if (!String.IsNullOrEmpty(textBoxSearch.Text))
+            {
+                threadStop = true;
+                IEnumerable<string> mailboxes = mailManager.GetMailboxes();
+                ShowMailboxes(mailboxes);
+                IEnumerable<MailMessage> messages = mailManager.GetMessages(textBoxSearch.Text);
+                if (messages.Count() > 0)
+                {
+                    ShowMails(messages);
+                }
+            }
+            else
+            {
+                threadStop = false;
+            }
+        }
+
+        private void BtnRefresh_Click(object sender, EventArgs e)
+        {
+            threadStop = true;
+        }
+
+        private void BtnBackup_Click(object sender, EventArgs e)
+        {
+            string username = textBoxUsername.Text;
+            string password = textBoxPassword.Text;
+            if (!String.IsNullOrEmpty(username) && !String.IsNullOrEmpty(password))
+            {
+                Backup backup = new Backup(username, password, mailManager.GetStringMessages());
+                backup.Serialize();
+            }
+            else
+            {
+                MessageBox.Show("Wrong username or password!");
+            }
+        }
+
+        private void BtnRestore_Click(object sender, EventArgs e)
+        {
+            threadStop = true;
+            string username = textBoxUsername.Text;
+            string password = textBoxPassword.Text;
+            if (!String.IsNullOrEmpty(username) && !String.IsNullOrEmpty(password))
+            {
+                Backup backup = Backup.Deserialize(username, password);
+                ShowMails(backup.GetMessagesFromStrings());
+            }
+            else
+            {
+                MessageBox.Show("Wrong username or password!");
             }
         }
     }

@@ -17,7 +17,6 @@ namespace SaintSender
         string Username;
         string Password;
         private string hostname;
-        private ImapClient client;
 
         public MailManager()
         {
@@ -36,35 +35,55 @@ namespace SaintSender
             }
             AccountName = username.Split('@')[0];
             Password = password;
-
-            client = new ImapClient(hostname, 993, Username, Password, AuthMethod.Login, true);
         }
 
         public void Logout()
         {
             Username = null;
             Password = null;
-            client.Logout();
         }
 
         public IEnumerable<MailMessage> GetMessages()
         {
+            ImapClient client = new ImapClient(hostname, 993, Username, Password, AuthMethod.Login, true);
             IEnumerable<MailMessage> messages;
             using (client)
             {
-                IEnumerable<uint> uids = client.Search(SearchCondition.All());
-                messages = client.GetMessages(uids.ToArray());
+                try
+                {
+                    IEnumerable<uint> uids = client.Search(SearchCondition.All());
+                    messages = client.GetMessages(uids.ToArray());
+                }
+                catch (NullReferenceException en)
+                {
+                    throw en;
+                }
+            }
+            return messages;
+        }
+
+        public List<StringMail> GetStringMessages()
+        {
+            List<StringMail> stringMailList = new List<StringMail>();
+            IEnumerable<MailMessage> mailList = GetMessages();
+
+            foreach (MailMessage mail in mailList)
+            {
+                StringMail stringMail = StringMail.MailToString(mail);
+                stringMailList.Add(stringMail);
             }
 
-            return messages;
+            return stringMailList;
         }
 
         public IEnumerable<MailMessage> GetMessages(string pattern)
         {
+            string searchPattern = @"*" + pattern + @"*";
+            ImapClient client = new ImapClient(hostname, 993, Username, Password, AuthMethod.Login, true);
             IEnumerable<MailMessage> messages;
             using (client)
             {
-                IEnumerable<uint> uids = client.Search(SearchCondition.From(pattern).Or(SearchCondition.Subject(pattern)));
+                IEnumerable<uint> uids = client.Search(SearchCondition.From(searchPattern).Or(SearchCondition.Subject(searchPattern).Or(SearchCondition.Body(searchPattern))));
                 messages = client.GetMessages(uids.ToArray());
             }
             return messages;
@@ -72,6 +91,7 @@ namespace SaintSender
 
         public IEnumerable<string> GetMailboxes()
         {
+            ImapClient client = new ImapClient(hostname, 993, Username, Password, AuthMethod.Login, true);
             using (client)
             {
                 IEnumerable<string> mailboxes = client.ListMailboxes();
