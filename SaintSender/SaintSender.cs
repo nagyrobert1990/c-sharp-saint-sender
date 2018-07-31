@@ -12,13 +12,12 @@ namespace SaintSender
     {
         Thread autoSyncThread;
         MailManager mailManager;
-        bool threadStop;
 
         public SaintSender()
         {
             InitializeComponent();
             mailManager = new MailManager();
-            threadStop = false;
+            autoSyncThread = new Thread(() => InvokeAccountLoad());
         }
 
         private void InitLoggedOutView()
@@ -42,7 +41,11 @@ namespace SaintSender
 
         private void ShowMailboxes(IEnumerable<string> mailboxes)
         {
-            listViewMailboxes.Clear();
+            listViewMailboxes.BeginInvoke(new Action(() =>
+            {
+                listViewMailboxes.Clear();
+            }));
+
             foreach (var mailbox in mailboxes)
             {
                 string mailboxName = mailbox;
@@ -55,41 +58,63 @@ namespace SaintSender
                     Tag = mailbox
                 };
 
-                listViewMailboxes.Items.Add(listViewItem);
+                listViewMailboxes.BeginInvoke(new Action(() =>
+                {
+                    listViewMailboxes.Items.Add(listViewItem);
+                }));
             }
         }
 
         private void ShowMails(IEnumerable<MailMessage> messages)
         {
-            dataGVListEmails.Rows.Clear();
+            dataGVListEmails.BeginInvoke(new Action(() =>
+            {
+                dataGVListEmails.Rows.Clear();
+            }));
+
             foreach (var message in messages)
             {
                 DataGridViewRow row = new DataGridViewRow();
                 var From = message.From;
                 var Subject = message.Subject;
                 var Date = message.Headers["Date"];
-                var rowIndex = dataGVListEmails.Rows.Add(new object[] { false, From, Subject, Date });
-                dataGVListEmails.Rows[rowIndex].Tag = message;
+                var rowIndex = 0;
+
+                dataGVListEmails.BeginInvoke(new Action(() =>
+                {
+                    rowIndex = dataGVListEmails.Rows.Add(new object[] { false, From, Subject, Date });
+                }));
+
+                dataGVListEmails.BeginInvoke(new Action(() =>
+                {
+                    dataGVListEmails.Rows[rowIndex].Tag = message;
+                }));
             }
-            dataGVListEmails.Sort(dataGVListEmails.Columns[3], ListSortDirection.Ascending);
+
+            dataGVListEmails.BeginInvoke(new Action(() =>
+            {
+                dataGVListEmails.Sort(dataGVListEmails.Columns[3], ListSortDirection.Ascending);
+            }));
         }
 
-        private void Account_Load()
+        private void InvokeAccountLoad()
         {
-            if (!threadStop)
+            while (true)
             {
-                try
-                {
-                    labelAccount.Text = mailManager.AccountName;
-                    IEnumerable<string> mailboxes = mailManager.GetMailboxes();
-                    ShowMailboxes(mailboxes);
-                    DisplayMessages();
-                }
-                catch (InvalidOperationException ex)
-                {
-                    MessageBox.Show(ex.ToString());
-                }
+                AccountLoad();
+                Thread.Sleep(5000);
             }
+        }
+
+        private void AccountLoad()
+        {
+            labelAccount.BeginInvoke(new Action(() =>
+            {
+                labelAccount.Text = mailManager.AccountName;
+            }));
+            IEnumerable<string> mailboxes = mailManager.GetMailboxes();
+            ShowMailboxes(mailboxes);
+            DisplayMessages();
         }
 
         private void DisplayMessages()
@@ -106,31 +131,20 @@ namespace SaintSender
                 try
                 {
                     mailManager.InitAccount(Username, Password);
-                    InitSignedInView();
-                    threadStop = false;
-                    autoSyncThread = new Thread(() =>
-                    {
-                        while (true)
-                        {
-                            Account_Load();
-                            Thread.Sleep(5000);
-                        }
-                    });
-
+                    autoSyncThread = new Thread(() => InvokeAccountLoad());
                     autoSyncThread.Start();
+                    InitSignedInView();
                 }
                 catch (Exception)
                 {
+                    autoSyncThread.Abort();
                     InitLoggedOutView();
                     labelInputNotVallid.Visible = true;
                 }
             }
             else if (btnSignIn.Text.Equals("Log out"))
             {
-                threadStop = true;
-#pragma warning disable CS0618 // Type or member is obsolete
-                autoSyncThread.Suspend();
-#pragma warning restore CS0618 // Type or member is obsolete
+                autoSyncThread.Abort();
                 InitLoggedOutView();
                 mailManager.Logout();
             }
@@ -144,6 +158,8 @@ namespace SaintSender
                 {
                     mailManager.SendNew(textBoxAddress.Text, textBoxSubject.Text, richTextBox2.Text);
                     richTextBox2.Clear();
+                    textBoxAddress.Clear();
+                    textBoxSubject.Clear();
                     MessageBox.Show("Message sent!");
                 }
                 catch (Exception ex)
@@ -200,7 +216,7 @@ namespace SaintSender
         {
             if (!String.IsNullOrEmpty(textBoxSearch.Text))
             {
-                threadStop = true;
+                autoSyncThread.Abort();
                 IEnumerable<string> mailboxes = mailManager.GetMailboxes();
                 ShowMailboxes(mailboxes);
                 IEnumerable<MailMessage> messages = mailManager.GetMessages(textBoxSearch.Text);
@@ -211,13 +227,14 @@ namespace SaintSender
             }
             else
             {
-                threadStop = false;
+                autoSyncThread.Start();
             }
         }
 
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
-            threadStop = true;
+            autoSyncThread = new Thread(() => InvokeAccountLoad());
+            autoSyncThread.Start();
         }
 
         private void BtnBackup_Click(object sender, EventArgs e)
@@ -237,11 +254,11 @@ namespace SaintSender
 
         private void BtnRestore_Click(object sender, EventArgs e)
         {
-            threadStop = true;
             string username = textBoxUsername.Text;
             string password = textBoxPassword.Text;
             if (!String.IsNullOrEmpty(username) && !String.IsNullOrEmpty(password))
             {
+                autoSyncThread.Abort();
                 Backup backup = Backup.Deserialize(username, password);
                 ShowMails(backup.GetMessagesFromStrings());
             }
